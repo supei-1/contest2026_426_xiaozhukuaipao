@@ -10,8 +10,8 @@
 | `apps` | `b27aa57d9cc3c0315d3394e61c50974d5d71d1b3` |
 | 配置快照 | `configs/esp32p4-function-ev-lvgl.config` |
 | 工具链 | `riscv-none-elf-gcc 13.4.0` |
-| 镜像 | `1,304,056 bytes` |
-| 镜像 SHA-256 | `5d47af2d7d2c97e62883e8c05008c63d2b70cff882a8a1c32b827f9b5870e69f` |
+| 镜像 | `1,305,572 bytes` |
+| 镜像 SHA-256 | `d6ed02a0d05ec212e7f3b7164f7e99b69b0ac450947fa58ba87af1de7f591aa3` |
 | 应用偏移 | `0x2000` |
 | 芯片 | `ESP32-P4` |
 
@@ -22,7 +22,7 @@
 ```bash
 repo init \
   -u https://github.com/supei-1/contest2026_426_xiaozhukuaipao \
-  -b codex/function-ev-submission \
+  -b dev-ai-contest-2026 \
   -m openvela.xml
 repo sync -c -j8
 ```

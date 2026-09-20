@@ -1,37 +1,114 @@
-# contest2026_426_xiaozhukuaipao
+# ESP32-P4 Function-EV 出库台
 
-## 本作品说明：ESP32-P4 Function-EV 出库台
+本仓是 `contest2026_426_xiaozhukuaipao` 的比赛专属提交仓，参赛方向为“新硬件适配”。作品基于 ESP32-P4 Function-EV Board 和 openvela/NuttX，实现板级启动链、显示/触摸适配以及面向出库台的 LVGL 操作界面。
 
-本仓是 `contest2026_426_xiaozhukuaipao` 的比赛提交入口，方向为“新硬件适配”。目标是在 ESP32-P4 Function-EV Board 上完成 openvela/NuttX 启动链、板级外设、LCD/触摸与 LVGL 应用验证，并提供一个面向出库台操作的纯 LVGL UI。
+## 作品功能
 
-### 已提交的公共仓代码
+- L0 启动链、UART0、NSH、GPIO/PWM、32 MB PSRAM、I2C0、SPI2、RTC 和 Watchdog。
+- SPI Flash MTD、SmartFS、MIPI-DSI、EK79007AD LCD、1024×600 RGB565、PSRAM framebuffer 和 `/dev/fb0`。
+- LVGL 9.2.1 fbdev、GT911 `/dev/input0`、LVGL touchscreen 和触摸坐标 180° 修正。
+- `lvgldemo dashboard` Function-EV 主界面，包含设备状态卡片和可输入命令的内嵌 NSH 终端。
+- P4 出库台应用：`首页 → 扫码/订单核验 → 选择车辆 → 派发任务 → 任务状态/异常提示`。
+- `lvgldemo widgets` 原有功能和 Ctrl+C 返回 `nsh>` 的行为保持不变。
 
-为遵守比赛的多仓规则，公共仓中的生产源码不复制到本仓，而是分别通过 PR 提交：
+出库台目前是纯 LVGL 应用层演示：订单、车辆、扫码结果和任务状态使用模拟数据，不操作真实摄像头、音频、车辆控制、LED、背光或 RTC。SC2336/V4L2/CSI 适配代码保留在公共仓提交中，但真实 CSI 帧接收仍标记为 BLOCKED。
 
-- [nuttx PR #393](https://github.com/open-vela/nuttx/pull/393)：ESP32-P4 Function-EV 板级适配、defconfig 和必要底层适配。
-- [nuttx-apps PR #131](https://github.com/open-vela/nuttx-apps/pull/131)：LVGL dashboard、内嵌 NSH、出库台应用和字库资产。
-
-### 本作品功能边界
-
-- `lvgldemo dashboard` 是 Function-EV 主界面，含设备状态卡片和内嵌 NSH 终端。
-- 主界面可以进入 P4 出库台应用，完成模拟的“扫码 → 订单核验 → 选车 → 派发 → 状态”流程。
-- 出库台当前只使用 LVGL 应用层模拟数据，不操作真实摄像头、音频、车辆、LED、背光或 RTC。
-- `lvgldemo widgets` 保持原有入口和 Ctrl+C 退出路径。
-
-### 复现和验证说明
-
-`openvela.xml` 暂时把 `apps` 和 `nuttx` 固定到 `supei-1` 的两个 PR 分支，使 PR 尚未合入时也能复现本作品；PR 合入后可改回官方 `dev-ai-contest-2026`。完整的代码归属、构建命令、证据分级和限制见 [docs/function-ev-porting.md](docs/function-ev-porting.md)。自建提交审计 Skill 见 [skills/function-ev-evidence/SKILL.md](skills/function-ev-evidence/SKILL.md)。
+## 仓库结构
 
 ```text
-nsh> lvgldemo dashboard
-# 点击主界面入口进入出库台，按流程推进
-# 发送 Ctrl+C，应回到 nsh>
-nsh> lvgldemo widgets
-# 原有 widgets 应保持可启动，并可 Ctrl+C 返回 nsh>
+README.md                         本说明和复现入口
+openvela.xml                      openvela 多仓 manifest
+configs/                          Function-EV 配置快照
+docs/function-ev-porting.md       移植范围、证据等级和功能边界
+docs/reproducible-build.md        构建、镜像和烧录说明
+logs/                             官方采集器生成的 AI Coding 原始日志
+skills/function-ev-evidence/      自建证据审计 Skill
 ```
 
-源码实现、构建、JTAG、UART0 和实际 LCD/触摸视觉必须分开报告；编译成功或 JTAG `Verify OK` 不能替代运行和视觉验证。AI Coding 日志只接受官方采集器生成的原始 JSONL，不手工改写模板示例。
+生产源码按比赛多仓规则保留在公共仓，不复制进本仓：
 
+- [nuttx PR #393](https://github.com/open-vela/nuttx/pull/393)：Function-EV 板级适配、配置和底层适配。
+- [nuttx-apps PR #131](https://github.com/open-vela/nuttx-apps/pull/131)：LVGL dashboard、内嵌 NSH、出库台应用和字库资产。
+
+当前 `openvela.xml` 固定到个人 fork 中对应的已提交版本，因此即使公共仓 PR 还在等待维护者审核，也可以按本仓复现当前作品。
+
+## 拉取完整工程
+
+需要 Linux x86_64、Git、Python 3、`repo` 和 NuttX/openvela 所需的基础构建工具。
+
+```bash
+mkdir -p ~/work/function-ev
+cd ~/work/function-ev
+
+repo init \
+  -u https://github.com/supei-1/contest2026_426_xiaozhukuaipao \
+  -b dev-ai-contest-2026 \
+  -m contest2026_426_xiaozhukuaipao.xml
+repo sync -c -j8
+```
+
+同步完成后，`nuttx/`、`apps/` 和其他 openvela 工程目录位于工作区根目录；本仓目录包含 manifest、配置、文档、日志和 Skill。
+
+## 构建
+
+在 manifest 工作区根目录执行：
+
+```bash
+export PATH="$PWD/prebuilts/build-tools/linux-x86_64/bin:$PWD/prebuilts/gcc/linux-x86_64/riscv-none-elf/bin:$PATH"
+cp contest2026_426_xiaozhukuaipao/configs/esp32p4-function-ev-lvgl.config nuttx/.config
+make -C nuttx olddefconfig
+make -C nuttx -j"$(nproc)"
+sha256sum nuttx/nuttx.bin
+```
+
+当前已验证的参考结果：
+
+```text
+文件：nuttx/nuttx.bin
+大小：1,305,572 bytes
+SHA-256：d6ed02a0d05ec212e7f3b7164f7e99b69b0ac450947fa58ba87af1de7f591aa3
+工具链：riscv-none-elf-gcc 13.4.0
+```
+
+不同主机、工具链或构建环境可能产生不同 SHA-256；应先核对 `nuttx`/`apps` 提交、配置和工具链版本，不能只根据“编译成功”判断字节级一致。
+
+## 烧录和运行
+
+烧录前必须重新核对实际芯片、USB-JTAG 设备、镜像路径、端口和地址。当前 Function-EV 应用镜像偏移为 `0x2000`，芯片为 ESP32-P4，使用板级 USB-JTAG/OpenOCD 流程烧录，并确认日志出现 `Verify OK`。
+
+UART0 使用 115200 8N1。启动后应看到 `nsh>`，再执行：
+
+```text
+nsh> help
+nsh> uname
+nsh> ps
+nsh> free
+nsh> lvgldemo dashboard
+```
+
+进入 dashboard 后，可以通过触摸进入 P4 出库台应用并按页面流程操作。dashboard 前台运行时发送 Ctrl+C，应返回 `nsh>`。
+
+原有控件回归：
+
+```text
+nsh> lvgldemo widgets
+```
+
+## 证据和限制
+
+本项目严格区分以下证据等级：
+
+1. **源码实现**：代码、配置、manifest 和提交存在。
+2. **构建验证**：生成镜像并记录大小、SHA-256 和构建日志。
+3. **JTAG 烧录验证**：OpenOCD 写入并返回 `Verify OK`。
+4. **UART0 运行验证**：确认启动到 `nsh>`，执行命令并验证 Ctrl+C 回收任务。
+5. **LCD/触摸视觉验证**：必须由实体屏幕观察画面并实际点击，不能用编译、JTAG 或 UART 日志替代。
+
+当前已取得构建、JTAG 和 UART0 运行证据；真实 LCD 视觉和完整 GT911 触摸点击闭环仍按报告中的实际观察结果标注。SC2336 真实 CSI 帧接收、长稳、功耗和温升也不在已完成结论中。
+
+AI Coding 日志位于 `logs/supei-1/`，由比赛官方采集器生成，未用手工内容替换；自建 Skill 位于 `skills/function-ev-evidence/`。
+
+<!-- 官方模板原文保留在提交历史中；当前 README 已按本作品重新整理。
 👋 欢迎参加 **2026 首届 openvela AI 硬件开发者大赛**！
 
 这是组委会为你的队伍创建的**专属参赛仓库**（本仓为样例/模板，队伍编号 `426`；你看到的将是你自己的 `contest2026_<编号>_<队伍名>`）。比赛期间，你的全部参赛代码、打包产物与 AI Coding 日志都提交到这里。
@@ -178,3 +255,4 @@ cd ..
 
 `contest2026_<编号>_<队伍名>` — 编号三位零填充；队名 slug（全小写、英文/拼音、连字符）。例：`contest2026_426_xiaozhukuaipao`。
 （仓库由组委会统一创建，**每队仅一个仓**，无需自行命名。）
+-->
