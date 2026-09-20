@@ -1,5 +1,37 @@
 # contest2026_426_xiaozhukuaipao
 
+## 本作品说明：ESP32-P4 Function-EV 出库台
+
+本仓是 `contest2026_426_xiaozhukuaipao` 的比赛提交入口，方向为“新硬件适配”。目标是在 ESP32-P4 Function-EV Board 上完成 openvela/NuttX 启动链、板级外设、LCD/触摸与 LVGL 应用验证，并提供一个面向出库台操作的纯 LVGL UI。
+
+### 已提交的公共仓代码
+
+为遵守比赛的多仓规则，公共仓中的生产源码不复制到本仓，而是分别通过 PR 提交：
+
+- [nuttx PR #393](https://github.com/open-vela/nuttx/pull/393)：ESP32-P4 Function-EV 板级适配、defconfig 和必要底层适配。
+- [nuttx-apps PR #131](https://github.com/open-vela/nuttx-apps/pull/131)：LVGL dashboard、内嵌 NSH、出库台应用和字库资产。
+
+### 本作品功能边界
+
+- `lvgldemo dashboard` 是 Function-EV 主界面，含设备状态卡片和内嵌 NSH 终端。
+- 主界面可以进入 P4 出库台应用，完成模拟的“扫码 → 订单核验 → 选车 → 派发 → 状态”流程。
+- 出库台当前只使用 LVGL 应用层模拟数据，不操作真实摄像头、音频、车辆、LED、背光或 RTC。
+- `lvgldemo widgets` 保持原有入口和 Ctrl+C 退出路径。
+
+### 复现和验证说明
+
+`openvela.xml` 暂时把 `apps` 和 `nuttx` 固定到 `supei-1` 的两个 PR 分支，使 PR 尚未合入时也能复现本作品；PR 合入后可改回官方 `dev-ai-contest-2026`。完整的代码归属、构建命令、证据分级和限制见 [docs/function-ev-porting.md](docs/function-ev-porting.md)。自建提交审计 Skill 见 [skills/function-ev-evidence/SKILL.md](skills/function-ev-evidence/SKILL.md)。
+
+```text
+nsh> lvgldemo dashboard
+# 点击主界面入口进入出库台，按流程推进
+# 发送 Ctrl+C，应回到 nsh>
+nsh> lvgldemo widgets
+# 原有 widgets 应保持可启动，并可 Ctrl+C 返回 nsh>
+```
+
+源码实现、构建、JTAG、UART0 和实际 LCD/触摸视觉必须分开报告；编译成功或 JTAG `Verify OK` 不能替代运行和视觉验证。AI Coding 日志只接受官方采集器生成的原始 JSONL，不手工改写模板示例。
+
 👋 欢迎参加 **2026 首届 openvela AI 硬件开发者大赛**！
 
 这是组委会为你的队伍创建的**专属参赛仓库**（本仓为样例/模板，队伍编号 `426`；你看到的将是你自己的 `contest2026_<编号>_<队伍名>`）。比赛期间，你的全部参赛代码、打包产物与 AI Coding 日志都提交到这里。
